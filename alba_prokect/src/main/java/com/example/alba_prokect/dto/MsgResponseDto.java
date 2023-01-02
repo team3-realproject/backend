@@ -1,5 +1,7 @@
 package com.example.alba_prokect.dto;
 
+import com.example.alba_prokect.errorcode.CommonStatusCode;
+import com.example.alba_prokect.errorcode.StatusCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -11,4 +13,10 @@ public class MsgResponseDto {
     public MsgResponseDto(String msg) {
         this.msg = msg;
     }
+
+    public MsgResponseDto(StatusCode statusCode){
+        this.msg = statusCode.getMsg();
+    }
+
+
 }

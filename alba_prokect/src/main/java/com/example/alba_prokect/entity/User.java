@@ -9,7 +9,7 @@ import javax.persistence.*;
 @Entity
 @Getter
 @RequiredArgsConstructor
-public class User {
+public class User extends Timestamped{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,6 +22,9 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String nickname;
+
+    @Column
+    private String profileImage;
 
     public User(SignupRequestDto requestDto, String password) {
         this.userId = requestDto.getUserId();

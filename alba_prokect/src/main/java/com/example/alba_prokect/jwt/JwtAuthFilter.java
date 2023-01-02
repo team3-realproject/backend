@@ -1,5 +1,6 @@
 package com.example.alba_prokect.jwt;
 
+import com.example.alba_prokect.errorcode.SecurityExceptionCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
@@ -22,63 +23,63 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
-
-        String token = jwtUtil.resolveToken(request);
-
-        if (token != null && jwtUtil.validateToken(token)) {   // token 검증
-            Authentication auth = jwtUtil.createAuthentication(token);    // 인증 객체 생성
-            SecurityContextHolder.getContext().setAuthentication(auth); // SecurityContextHolder에 인증 객체 저장
-        }
-        filterChain.doFilter(request, response);
-    }
-
-
-
-
-
 //    @Override
-//    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+//    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+//                                    FilterChain filterChain) throws ServletException, IOException {
 //
-//        // request header에서 토큰을 가져오기
 //        String token = jwtUtil.resolveToken(request);
 //
-//        if(token != null) {
-//            // 토큰 검증
-//            if(!jwtUtil.validateToken(token)){
-//                jwtExceptionHandler(response, "Token Error", HttpStatus.UNAUTHORIZED.value());
-//                return;
-//            }
-//            // 토큰에서 유저정보 뽑기
-//            Claims info = jwtUtil.getUserInfoFromToken(token);
-//            // subject로 저장한 username 값 SecurityContextHolder에 저장
-//            setAuthentication(info.getSubject());
+//        if (token != null && jwtUtil.validateToken(token)) {   // token 검증
+//            Authentication auth = jwtUtil.createAuthentication(token);    // 인증 객체 생성
+//            SecurityContextHolder.getContext().setAuthentication(auth); // SecurityContextHolder에 인증 객체 저장
 //        }
-//        filterChain.doFilter(request,response);
+//        filterChain.doFilter(request, response);
 //    }
-//
-//    public void setAuthentication(String username) {
-//        SecurityContext context = SecurityContextHolder.createEmptyContext();
-//        // 인증된 유저 생성
-//        Authentication authentication = jwtUtil.createAuthentication(username);
-//        context.setAuthentication(authentication);
-//
-//        // >> 여기서 설정한 것을 @AuthenticationPrincipal 여기서 뽑아쓸 수 있음
-//        SecurityContextHolder.setContext(context);
-//    }
-//
-//    // 토큰에러 예외처리
-//    public void jwtExceptionHandler(HttpServletResponse response, String msg, int statusCode) {
-//        response.setStatus(statusCode); // HttpStatus.UNAUTHORIZED.value()
-//        response.setContentType("application/json");
-//        try {
-//            String json = new ObjectMapper().writeValueAsString(new SecurityExceptionCode(msg, statusCode));
-//            response.getWriter().write(json);
-//        } catch (Exception e) {
-//            log.error(e.getMessage());
-//        }
-//    }
+
+
+
+
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+        // request header에서 토큰을 가져오기
+        String token = jwtUtil.resolveToken(request);
+
+        if(token != null) {
+            // 토큰 검증
+            if(!jwtUtil.validateToken(token)){
+                jwtExceptionHandler(response, "Token Error", HttpStatus.UNAUTHORIZED.value());
+                return;
+            }
+            // 토큰에서 유저정보 뽑기
+            Claims info = jwtUtil.getUserInfoFromToken(token);
+            // subject로 저장한 username 값 SecurityContextHolder에 저장
+            setAuthentication(info.getSubject());
+        }
+        filterChain.doFilter(request,response);
+    }
+
+    public void setAuthentication(String username) {
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        // 인증된 유저 생성
+        Authentication authentication = jwtUtil.createAuthentication(username);
+        context.setAuthentication(authentication);
+
+        // >> 여기서 설정한 것을 @AuthenticationPrincipal 여기서 뽑아쓸 수 있음
+        SecurityContextHolder.setContext(context);
+    }
+
+    // 토큰에러 예외처리
+    public void jwtExceptionHandler(HttpServletResponse response, String msg, int statusCode) {
+        response.setStatus(statusCode); // HttpStatus.UNAUTHORIZED.value()
+        response.setContentType("application/json");
+        try {
+            String json = new ObjectMapper().writeValueAsString(new SecurityExceptionCode(msg, statusCode));
+            response.getWriter().write(json);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
 
 }
