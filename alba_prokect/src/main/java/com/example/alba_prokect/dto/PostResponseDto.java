@@ -33,4 +33,17 @@ public class PostResponseDto {
         this.createAt = post.getCreatedAt();
         this.modifiedAt = post.getModifiedAt();
     }
+
+    public PostResponseDto(Post post, boolean isLike, int likeCount) {
+        this.postId = post.getId();
+        this.profileImage = post.getUser().getProfileImage();
+        this.title = post.getTitle();
+        this.content = post.getContent();
+        this.imgUrl = post.getImgUrl();
+        this.postLikeNum = likeCount;
+        this.isLikePost = isLike;
+        this.category = post.getCategory();
+        this.createAt = post.getCreatedAt();
+        this.modifiedAt = post.getModifiedAt();
+    }
 }

@@ -7,6 +7,7 @@ import com.example.alba_prokect.entity.Post;
 import com.example.alba_prokect.entity.User;
 import com.example.alba_prokect.errorcode.CommonStatusCode;
 import com.example.alba_prokect.exception.RestApiException;
+import com.example.alba_prokect.repository.LikesRepository;
 import com.example.alba_prokect.repository.PostRepository;
 import com.example.alba_prokect.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,8 @@ public class PostService {
 
     private final PostRepository postRepository;
 
+    private final LikesRepository likesRepository;
+
     //작성
     @Transactional
     public ResponseEntity<?> createPost(PostRequestDto requestDto) {
@@ -36,15 +39,29 @@ public class PostService {
     //전체글조회
     @Transactional(readOnly = true)
     public List<PostResponseDto> getPosts() {
+        User user = SecurityUtil.getCurrentUser();
         List<Post> posts = postRepository.findAllByOrderByCreatedAt();
-        return posts.stream().map(PostResponseDto::new).collect(Collectors.toList());
+        return posts.stream().map(post -> {
+            boolean isLike = false;
+            if(user != null){
+                isLike = likesRepository.existsByUserIdAndPostId(user.getId(), post.getId());
+            }
+            int likeCount = likesRepository.countByPostId(post.getId());
+            return new PostResponseDto(post, isLike, likeCount);
+        }).collect(Collectors.toList());
     }
     //상세조회
     public ResponseEntity<?> getPost(Long postId) {
+        User user = SecurityUtil.getCurrentUser();
         Post post = postRepository.findById(postId).orElseThrow(
                 () -> new RestApiException(CommonStatusCode.NO_ARTICLE)
         );
-        return new ResponseEntity<>(new PostResponseDto(post), HttpStatus.OK);
+        boolean isLike = false;
+        if(user != null){
+            isLike = likesRepository.existsByUserIdAndPostId(user.getId(), post.getId());
+        }
+        int likeCount = likesRepository.countByPostId(post.getId());
+        return new ResponseEntity<>(new PostResponseDto(post, isLike, likeCount), HttpStatus.OK);
     }
     //수정
     @Transactional
@@ -58,7 +75,9 @@ public class PostService {
             throw new RestApiException(CommonStatusCode.INVALID_USER_UPDATE);
         }
         post.update(requestDto);
-        return new ResponseEntity<>(new PostResponseDto(post), HttpStatus.OK);
+        boolean isLike = likesRepository.existsByUserIdAndPostId(user.getId(), post.getId());
+        int likeCount = likesRepository.countByPostId(post.getId());
+        return new ResponseEntity<>(new PostResponseDto(post, isLike, likeCount), HttpStatus.OK);
     }
     //삭제
     public ResponseEntity<?> deletePost(Long postId) {

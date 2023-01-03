@@ -2,6 +2,7 @@ package com.example.alba_prokect.service;
 
 import com.example.alba_prokect.dto.CommentRequestDto;
 import com.example.alba_prokect.dto.CommentResponseDto;
+import com.example.alba_prokect.dto.MsgResponseDto;
 import com.example.alba_prokect.entity.Comment;
 import com.example.alba_prokect.entity.Post;
 import com.example.alba_prokect.entity.User;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +24,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
 
     private final PostRepository postRepository;
-
+    @Transactional
     public ResponseEntity<?> createComment(Long postId, CommentRequestDto requestDto) {
         User user = SecurityUtil.getCurrentUser();
         Post post = postRepository.findById(postId).orElseThrow(
@@ -31,5 +33,29 @@ public class CommentService {
         Comment save = new Comment(user, post.getId(), requestDto);
         commentRepository.saveAndFlush(save);
         return new ResponseEntity<>(new CommentResponseDto(save), HttpStatus.OK);
+    }
+    @Transactional
+    public ResponseEntity<?> updateComment(Long commentId, CommentRequestDto requestDto) {
+        User user = SecurityUtil.getCurrentUser();
+        Comment comment = commentRepository.findById(commentId).orElseThrow(
+                () -> new RestApiException(CommonStatusCode.NO_COMMENT)
+        );
+        if(!comment.getUserId().equals(user.getId())){
+            throw new RestApiException(CommonStatusCode.INVALID_USER_UPDATE);
+        }
+        comment.update(requestDto, user);
+        return new ResponseEntity<>(new CommentResponseDto(comment), HttpStatus.OK);
+    }
+    @Transactional
+    public ResponseEntity<?> deleteComment(Long commentId) {
+        User user = SecurityUtil.getCurrentUser();
+        Comment comment = commentRepository.findById(commentId).orElseThrow(
+                () -> new RestApiException(CommonStatusCode.NO_COMMENT)
+        );
+        if(!comment.getUserId().equals(user.getId())){
+            throw new RestApiException(CommonStatusCode.INVALID_USER_UPDATE);
+        }
+        commentRepository.deleteById(commentId);
+        return new ResponseEntity<>(new MsgResponseDto(CommonStatusCode.DELETE_COMMENT), HttpStatus.OK);
     }
 }

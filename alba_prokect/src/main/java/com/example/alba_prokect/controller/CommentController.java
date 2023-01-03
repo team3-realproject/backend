@@ -19,4 +19,14 @@ public class CommentController {
         return commentService.createComment(postId, requestDto);
     }
 
+    @PutMapping("/{commentId}")
+    public ResponseEntity<?> updateComment(@PathVariable Long commentId, @RequestBody CommentRequestDto requestDto){
+        return commentService.updateComment(commentId, requestDto);
+    }
+
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<?> deleteComment(@PathVariable Long commentId){
+        return commentService.deleteComment(commentId);
+    }
+
 }
