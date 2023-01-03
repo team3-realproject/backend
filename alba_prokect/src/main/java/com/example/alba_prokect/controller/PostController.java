@@ -46,6 +46,4 @@ public class PostController {
         return postService.deletePost(postId);
     }
 
-
-
 }
